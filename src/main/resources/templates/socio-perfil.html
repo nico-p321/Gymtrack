@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Perfil del socio</title>
+</head>
+<body>
+
+<a th:href="@{/socios}">&larr; Volver al listado</a>
+
+<h1 th:text="${socio.nombre} + ' ' + ${socio.apellido}"></h1>
+<p>Teléfono: <span th:text="${socio.telefono}"></span></p>
+<p>Email: <span th:text="${socio.email}"></span></p>
+<p><strong>Estado de la cuenta: </strong>
+    <span th:text="${estado}"></span>
+</p>
+
+<hr>
+
+<h2>Registrar nuevo pago</h2>
+<form th:action="@{/socios/{id}/pagos/registrar(id=${socio.idSocio})}" method="post">
+    <label>Fecha de pago:</label>
+    <input type="date" name="fechaPago" required><br><br>
+
+    <label>Monto (dejar vacío para usar el valor vigente):</label>
+    <input type="number" step="0.01" name="monto"><br><br>
+
+    <button type="submit">Registrar pago</button>
+</form>
+
+<hr>
+
+<h2>Historial de pagos</h2>
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Fecha de pago</th>
+        <th>Monto</th>
+    </tr>
+    <tr th:each="pago : ${pagos}">
+        <td th:text="${pago.fechaPago}"></td>
+        <td th:text="${pago.monto}"></td>
+    </tr>
+</table>
+
+</body>
+</html>

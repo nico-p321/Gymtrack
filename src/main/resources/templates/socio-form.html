@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Socio</title>
+</head>
+<body>
+<h1 th:text="${socio.idSocio} != null ? 'Editar socio' : 'Dar de alta un socio'"></h1>
+
+<p th:if="${error}" th:text="${error}" style="color:red;"></p>
+
+<form th:action="@{/socios/guardar}" th:object="${socio}" method="post">
+    <input type="hidden" th:field="*{idSocio}">
+
+    <label>Nombre:</label>
+    <input type="text" th:field="*{nombre}" required><br><br>
+
+    <label>Apellido:</label>
+    <input type="text" th:field="*{apellido}" required><br><br>
+
+    <label>Teléfono:</label>
+    <input type="text" th:field="*{telefono}"><br><br>
+
+    <label>Email:</label>
+    <input type="email" th:field="*{email}"><br><br>
+
+    <button type="submit">Guardar</button>
+</form>
+</body>
+</html>

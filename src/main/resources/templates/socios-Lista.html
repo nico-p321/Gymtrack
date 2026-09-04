@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Socios</title>
+</head>
+<body>
+<h1>Listado de socios</h1>
+
+<a th:href="@{/socios/nuevo}">+ Nuevo socio</a>
+
+<hr>
+
+<form th:action="@{/socios}" method="get">
+    <input type="text" name="texto" placeholder="Buscar por nombre o apellido" th:value="${texto}">
+
+    <select name="estadoSocio">
+        <option value="">-- Estado del socio --</option>
+        <option value="activo" th:selected="${estadoSocio == 'activo'}">Activo</option>
+        <option value="inactivo" th:selected="${estadoSocio == 'inactivo'}">Inactivo</option>
+    </select>
+
+    <select name="estadoCuota">
+        <option value="">-- Estado de cuota --</option>
+        <option value="al_dia" th:selected="${estadoCuota == 'al_dia'}">Al día</option>
+        <option value="vencida" th:selected="${estadoCuota == 'vencida'}">Vencida</option>
+    </select>
+
+    <button type="submit">Buscar</button>
+    <a th:href="@{/socios}">Limpiar filtros</a>
+</form>
+
+<hr>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Fecha de alta</th>
+        <th>Estado socio</th>
+        <th>Estado cuota</th>
+        <th>Acciones</th>
+    </tr>
+    <tr th:each="socio : ${socios}">
+        <td th:text="${socio.nombre}"></td>
+        <td th:text="${socio.apellido}"></td>
+        <td th:text="${socio.telefono}"></td>
+        <td th:text="${socio.email}"></td>
+        <td th:text="${socio.fechaAlta}"></td>
+        <td th:text="${socio.activo} ? 'Activo' : 'Inactivo'"></td>
+        <td th:text="${socio.estadoCuota}"></td>
+        <td>
+            <a th:href="@{/socios/{id}/pagos(id=${socio.idSocio})}">Ver pagos</a> |
+            <a th:href="@{/socios/{id}/editar(id=${socio.idSocio})}">Editar</a> |
+
+            <form th:if="${socio.activo}" th:action="@{/socios/{id}/baja(id=${socio.idSocio})}" method="post" style="display:inline;">
+                <button type="submit" onclick="return confirm('¿Estás seguro de dar de baja a este socio?');">Dar de baja</button>
+            </form>
+
+            <form th:unless="${socio.activo}" th:action="@{/socios/{id}/reactivar(id=${socio.idSocio})}" method="post" style="display:inline;">
+                <button type="submit">Reactivar</button>
+            </form>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
