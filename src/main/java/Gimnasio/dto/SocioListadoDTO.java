@@ -1,6 +1,7 @@
 package Gimnasio.dto;
 
 import Gimnasio.model.Socio;
+import org.jspecify.annotations.NonNull;
 
 import java.time.LocalDate;
 
@@ -14,8 +15,10 @@ public class SocioListadoDTO {
     private LocalDate fechaAlta;
     private boolean activo;
     private String estadoCuota;
+    private Long diasVencido;
+    private boolean critico;
 
-    public SocioListadoDTO(Socio socio, String estadoCuota) {
+    public SocioListadoDTO(@NonNull Socio socio, String estadoCuota, Long diasVencido, boolean critico) {
         this.idSocio = socio.getIdSocio();
         this.nombre = socio.getNombre();
         this.apellido = socio.getApellido();
@@ -24,6 +27,8 @@ public class SocioListadoDTO {
         this.fechaAlta = socio.getFechaAlta();
         this.activo = socio.isActivo();
         this.estadoCuota = estadoCuota;
+        this.diasVencido = diasVencido;
+        this.critico = critico;
     }
 
     public Long getIdSocio() { return idSocio; }
@@ -34,4 +39,6 @@ public class SocioListadoDTO {
     public LocalDate getFechaAlta() { return fechaAlta; }
     public boolean isActivo() { return activo; }
     public String getEstadoCuota() { return estadoCuota; }
+    public Long getDiasVencido() { return diasVencido; }
+    public boolean isCritico() { return critico; }
 }

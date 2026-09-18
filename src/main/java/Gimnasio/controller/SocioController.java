@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,19 +31,16 @@ public class SocioController {
                          @RequestParam(required = false) String estadoCuota,
                          Model model) {
 
-        // 1. Traer socios según texto de búsqueda
         List<Socio> socios = (texto != null && !texto.isBlank())
                 ? socioService.buscarPorTexto(texto)
                 : socioService.listarTodos();
 
-        // 2. Filtrar por estado del socio (activo/inactivo)
         if ("activo".equals(estadoSocio)) {
             socios = socios.stream().filter(Socio::isActivo).collect(Collectors.toList());
         } else if ("inactivo".equals(estadoSocio)) {
             socios = socios.stream().filter(s -> !s.isActivo()).collect(Collectors.toList());
         }
 
-        // 3. Calcular estado de cuota de cada socio y filtrar si corresponde
         List<SocioListadoDTO> resultado = new ArrayList<>();
         for (Socio s : socios) {
             String estado = cuotaService.calcularEstado(s.getIdSocio());
@@ -49,7 +48,20 @@ public class SocioController {
             if ("al_dia".equals(estadoCuota) && !estado.equals("AL DÍA")) continue;
             if ("vencida".equals(estadoCuota) && !estado.equals("VENCIDO")) continue;
 
-            resultado.add(new SocioListadoDTO(s, estado));
+            Long diasVencido = null;
+            boolean critico = false;
+
+            if (estado.equals("VENCIDO")) {
+                LocalDate fechaPago = cuotaService.ultimoPago(s.getIdSocio())
+                        .orElseThrow(() -> new RuntimeException("Inconsistencia: estado VENCIDO sin pago registrado"))
+                        .getFechaPago();
+
+                LocalDate vencimiento = cuotaService.calcularVencimiento(fechaPago);
+                diasVencido = ChronoUnit.DAYS.between(vencimiento, LocalDate.now());
+                critico = diasVencido > 15;
+            }
+
+            resultado.add(new SocioListadoDTO(s, estado, diasVencido, critico));
         }
 
         model.addAttribute("socios", resultado);

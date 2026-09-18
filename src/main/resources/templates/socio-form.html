@@ -1,30 +1,48 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Socio</title>
-</head>
-<body>
-<h1 th:text="${socio.idSocio} != null ? 'Editar socio' : 'Dar de alta un socio'"></h1>
+<head th:replace="~{fragments/layout :: head(titulo='Socio')}"></head>
+<body class="bg-slate-50 min-h-screen">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
 
-<p th:if="${error}" th:text="${error}" style="color:red;"></p>
+<main class="max-w-lg mx-auto p-6">
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        <h1 class="text-xl font-bold text-slate-800 mb-4"
+            th:text="${socio.idSocio} != null ? 'Editar socio' : 'Dar de alta un socio'"></h1>
 
-<form th:action="@{/socios/guardar}" th:object="${socio}" method="post">
-    <input type="hidden" th:field="*{idSocio}">
+        <p th:if="${error}" th:text="${error}" class="bg-red-50 text-red-600 text-sm px-3 py-2 rounded mb-4"></p>
 
-    <label>Nombre:</label>
-    <input type="text" th:field="*{nombre}" required><br><br>
+        <form th:action="@{/socios/guardar}" th:object="${socio}" method="post" class="flex flex-col gap-4">
+            <input type="hidden" th:field="*{idSocio}">
 
-    <label>Apellido:</label>
-    <input type="text" th:field="*{apellido}" required><br><br>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Nombre</label>
+                <input type="text" th:field="*{nombre}" required
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+            </div>
 
-    <label>Teléfono:</label>
-    <input type="text" th:field="*{telefono}"><br><br>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Apellido</label>
+                <input type="text" th:field="*{apellido}" required
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+            </div>
 
-    <label>Email:</label>
-    <input type="email" th:field="*{email}"><br><br>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Teléfono</label>
+                <input type="text" th:field="*{telefono}"
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+            </div>
 
-    <button type="submit">Guardar</button>
-</form>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Email</label>
+                <input type="email" th:field="*{email}"
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+            </div>
+
+            <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium mt-2">
+                Guardar
+            </button>
+        </form>
+    </div>
+</main>
 </body>
 </html>
