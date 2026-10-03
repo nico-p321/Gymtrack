@@ -6,6 +6,7 @@
 
 <main class="max-w-3xl mx-auto p-6 flex flex-col gap-6">
 
+    <!-- Ficha del socio con estado de cuenta -->
     <div class="bg-white rounded-lg shadow-sm p-6">
         <h1 class="text-2xl font-bold text-slate-800" th:text="${socio.nombre} + ' ' + ${socio.apellido}"></h1>
         <p class="text-sm text-slate-500 mt-1">Teléfono: <span th:text="${socio.telefono}"></span></p>
@@ -18,12 +19,13 @@
         </p>
     </div>
 
+    <!-- Formulario para registrar nuevo pago -->
     <div class="bg-white rounded-lg shadow-sm p-6">
         <h2 class="text-lg font-semibold text-slate-800 mb-4">Registrar nuevo pago</h2>
         <form th:action="@{/socios/{id}/pagos/registrar(id=${socio.idSocio})}" method="post" class="flex flex-wrap gap-4 items-end">
             <div>
                 <label class="block text-sm font-medium text-slate-600 mb-1">Fecha de pago</label>
-                <input type="date" name="fechaPago" required
+                <input type="date" name="fechaPago" required th:value="${hoy}"
                        class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
             </div>
             <div>
@@ -37,6 +39,7 @@
         </form>
     </div>
 
+    <!-- Historial de pagos del socio -->
     <div class="bg-white rounded-lg shadow-sm overflow-hidden">
         <h2 class="text-lg font-semibold text-slate-800 px-6 pt-6">Historial de pagos</h2>
         <table class="w-full text-left border-collapse mt-4">

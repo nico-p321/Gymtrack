@@ -3,6 +3,10 @@ package Gimnasio.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+/**
+ * Entidad que representa a un socio (miembro) del gimnasio.
+ * Mapea a la tabla "socios" en la base de datos.
+ */
 @Entity
 @Table(name = "socios")
 public class Socio {

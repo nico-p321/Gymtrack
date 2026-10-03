@@ -5,6 +5,7 @@
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
 <main class="max-w-6xl mx-auto p-6">
+    <!-- Header con título y botón de nuevo socio -->
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-slate-800">Listado de socios</h1>
         <a th:href="@{/socios/nuevo}"
@@ -13,6 +14,23 @@
         </a>
     </div>
 
+    <!-- Cards resumen: Activos, Inactivos, Vencidos -->
+    <div class="flex gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-sm px-4 py-3 flex-1">
+            <p class="text-xs text-slate-400 uppercase font-medium">Activos</p>
+            <p class="text-2xl font-bold text-green-600" th:text="${totalActivos}"></p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm px-4 py-3 flex-1">
+            <p class="text-xs text-slate-400 uppercase font-medium">Inactivos</p>
+            <p class="text-2xl font-bold text-slate-500" th:text="${totalInactivos}"></p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm px-4 py-3 flex-1">
+            <p class="text-xs text-slate-400 uppercase font-medium">Vencidos</p>
+            <p class="text-2xl font-bold text-red-600" th:text="${totalVencidos}"></p>
+        </div>
+    </div>
+
+    <!-- Formulario de filtros: búsqueda por texto, estado socio, estado cuota -->
     <form th:action="@{/socios}" method="get" class="flex flex-wrap gap-3 mb-6 bg-white p-4 rounded-lg shadow-sm">
         <input type="text" name="texto" placeholder="Buscar por nombre o apellido" th:value="${texto}"
                class="border border-slate-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-teal-500">
@@ -39,7 +57,18 @@
         </a>
     </form>
 
-    <div class="bg-white rounded-lg shadow-sm overflow-x-auto">
+    <!-- Mensaje cuando no hay resultados -->
+    <div th:if="${#lists.isEmpty(socios)}" class="bg-white rounded-lg shadow-sm p-8 text-center">
+        <p th:if="${hayFiltrosAplicados}" class="text-slate-500">
+            No se encontraron socios con esos criterios.
+        </p>
+        <p th:unless="${hayFiltrosAplicados}" class="text-slate-500">
+            Todavía no hay socios registrados.
+        </p>
+    </div>
+
+    <!-- Tabla de socios con estado de cuota calculado -->
+    <div th:unless="${#lists.isEmpty(socios)}" class="bg-white rounded-lg shadow-sm overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead class="bg-slate-100">
             <tr>
@@ -55,22 +84,23 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="socio : ${socios}"
-                th:with="claseCuota=(${socio.critico} ? 'bg-red-100 text-red-700' : (${socio.estadoCuota == 'VENCIDO'} ? 'bg-orange-100 text-orange-700' : (${socio.estadoCuota == 'AL DÍA'} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600')))"
-                class="border-b last:border-0 hover:bg-slate-50 transition">
+            <tr th:each="socio : ${socios}">
+                <!-- Clase CSS dinámica según estado de cuota: crítico (rojo), vencido (naranja), al día (verde), sin pagos (gris) -->
+                <th:with="claseCuota=(${socio.critico}? 'bg-red-100 text-red-700' : (${socio.estadoCuota == 'VENCIDO'} ? 'bg-orange-100 text-orange-700' : (${socio.estadoCuota == 'AL DÍA'} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600')))"
+                <td class="border-b last:border-0 hover:bg-slate-50 transition">
                 <td class="px-4 py-3 text-sm text-slate-700" th:text="${socio.nombre}"></td>
                 <td class="px-4 py-3 text-sm text-slate-700" th:text="${socio.apellido}"></td>
                 <td class="px-4 py-3 text-sm text-slate-500" th:text="${socio.telefono}"></td>
                 <td class="px-4 py-3 text-sm text-slate-500" th:text="${socio.email}"></td>
                 <td class="px-4 py-3 text-sm text-slate-500" th:text="${socio.fechaAlta}"></td>
                 <td class="px-4 py-3">
-                        <span class="px-2 py-1 rounded-full text-xs font-medium"
-                              th:classappend="${socio.activo} ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'"
-                              th:text="${socio.activo} ? 'Activo' : 'Inactivo'"></span>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium"
+                          th:classappend="${socio.activo} ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'"
+                          th:text="${socio.activo} ? 'Activo' : 'Inactivo'"></span>
                 </td>
                 <td class="px-4 py-3">
-                        <span class="px-2 py-1 rounded-full text-xs font-medium" th:classappend="${claseCuota}"
-                              th:text="${socio.critico} ? 'MOROSO CRÍTICO' : ${socio.estadoCuota}"></span>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium" th:classappend="${claseCuota}"
+                          th:text="${socio.critico} ? 'MOROSO CRÍTICO' : ${socio.estadoCuota}"></span>
                 </td>
                 <td class="px-4 py-3 text-sm text-slate-500 text-center" th:text="${socio.diasVencido} ?: '-'"></td>
                 <td class="px-4 py-3 text-sm whitespace-nowrap">
@@ -78,12 +108,14 @@
                     <span class="text-slate-300 mx-1">|</span>
                     <a th:href="@{/socios/{id}/editar(id=${socio.idSocio})}" class="text-blue-600 hover:underline">Editar</a>
                     <span class="text-slate-300 mx-1">|</span>
+                    <!-- Formulario inline para dar de baja (solo si activo) -->
                     <form th:if="${socio.activo}" th:action="@{/socios/{id}/baja(id=${socio.idSocio})}" method="post" class="inline">
                         <button type="submit" onclick="return confirm('¿Estás seguro de dar de baja a este socio?');"
                                 class="bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded text-xs font-medium">
                             Dar de baja
                         </button>
                     </form>
+                    <!-- Formulario inline para reactivar (solo si inactivo) -->
                     <form th:unless="${socio.activo}" th:action="@{/socios/{id}/reactivar(id=${socio.idSocio})}" method="post" class="inline">
                         <button type="submit" class="bg-green-50 text-green-600 hover:bg-green-100 px-2 py-1 rounded text-xs font-medium">
                             Reactivar

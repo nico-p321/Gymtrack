@@ -6,12 +6,15 @@
 
 <main class="max-w-lg mx-auto p-6">
     <div class="bg-white rounded-lg shadow-sm p-6">
+        <!-- Título dinámico: "Editar socio" si tiene ID, "Dar de alta un socio" si es nuevo -->
         <h1 class="text-xl font-bold text-slate-800 mb-4"
             th:text="${socio.idSocio} != null ? 'Editar socio' : 'Dar de alta un socio'"></h1>
 
+        <!-- Muestra error de validación (ej: email duplicado) -->
         <p th:if="${error}" th:text="${error}" class="bg-red-50 text-red-600 text-sm px-3 py-2 rounded mb-4"></p>
 
         <form th:action="@{/socios/guardar}" th:object="${socio}" method="post" class="flex flex-col gap-4">
+            <!-- ID oculto para edición (nuevo socio no tiene ID) -->
             <input type="hidden" th:field="*{idSocio}">
 
             <div>

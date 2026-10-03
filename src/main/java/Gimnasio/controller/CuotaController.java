@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Controlador para la gestión de pagos/cuotas de un socio específico.
+ * Rutas anidadas bajo /socios/{idSocio}/pagos
+ */
 @Controller
 @RequestMapping("/socios/{idSocio}/pagos")
 public class CuotaController {
@@ -31,6 +35,7 @@ public class CuotaController {
         model.addAttribute("socio", socio);
         model.addAttribute("pagos", cuotaService.historialDePagos(idSocio));
         model.addAttribute("estado", cuotaService.calcularEstado(idSocio));
+        model.addAttribute("hoy", LocalDate.now());
 
         return "socio-perfil";
     }

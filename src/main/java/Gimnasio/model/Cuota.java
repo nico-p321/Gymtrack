@@ -1,10 +1,14 @@
 package Gimnasio.model;
 
-
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Entidad que representa un pago de cuota realizado por un socio.
+ * Mapea a la tabla "cuotas" en la base de datos.
+ * Cada cuota está asociada a un socio (relación ManyToOne).
+ */
 @Entity
 @Table(name = "cuotas")
 public class Cuota {

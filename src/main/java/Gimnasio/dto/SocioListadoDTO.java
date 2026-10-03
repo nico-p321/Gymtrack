@@ -5,6 +5,11 @@ import org.jspecify.annotations.NonNull;
 
 import java.time.LocalDate;
 
+/**
+ * DTO (Data Transfer Object) para mostrar socios en el listado.
+ * Combina datos del socio con información calculada del estado de su cuota.
+ * Se usa para evitar exponer la entidad completa y agregar campos derivados.
+ */
 public class SocioListadoDTO {
 
     private Long idSocio;
@@ -14,9 +19,9 @@ public class SocioListadoDTO {
     private String email;
     private LocalDate fechaAlta;
     private boolean activo;
-    private String estadoCuota;
-    private Long diasVencido;
-    private boolean critico;
+    private String estadoCuota;    // "AL DÍA", "VENCIDO", "SIN PAGOS REGISTRADOS"
+    private Long diasVencido;      // Días transcurridos desde el vencimiento (null si al día)
+    private boolean critico;       // true si diasVencido > 15 (moroso crítico)
 
     public SocioListadoDTO(@NonNull Socio socio, String estadoCuota, Long diasVencido, boolean critico) {
         this.idSocio = socio.getIdSocio();
