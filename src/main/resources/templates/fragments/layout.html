@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <title th:text="${titulo} + ' · Gymtrack'">Gymtrack</title>
+    <!-- Tailwind CSS via CDN para estilos utilitarios -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+<!-- Navbar compartida en todas las páginas -->
+<nav th:fragment="navbar" class="bg-slate-800 text-white px-6 py-4 flex gap-6 items-center shadow-md">
+    <span class="font-bold text-lg tracking-wide">️ Gymtrack</span>
+    <a th:href="@{/socios}" class="hover:text-teal-300 transition">Socios</a>
+    <a th:href="@{/socios/nuevo}" class="hover:text-teal-300 transition">+ Nuevo socio</a>
+    <a th:href="@{/cuota-valor}" class="hover:text-teal-300 transition">Valor de cuota</a>
+</nav>
+
+</body>
+</html>
