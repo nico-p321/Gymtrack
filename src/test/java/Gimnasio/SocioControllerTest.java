@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -124,5 +126,66 @@ class SocioControllerTest {
 
         // Assert: no hay filtros aplicados
         assertFalse((Boolean) model.getAttribute("hayFiltrosAplicados"));
+    }
+
+    /**
+     * Verifica que al elegir un objetivo de la lista, se guarda y se vuelve a la ficha del socio.
+     */
+    @Test
+    void guardarObjetivo_seleccionaUno_guardaYCuelveAlPerfil() {
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String vista = socioController.guardarObjetivo(1L, "GANAR_MASA_MUSCULAR", redirectAttributes);
+
+        verify(socioService).actualizarObjetivo(1L, "GANAR_MASA_MUSCULAR");
+        assertEquals("redirect:/socios/1/pagos", vista);
+        assertEquals("Objetivo actualizado correctamente",
+                redirectAttributes.getFlashAttributes().get("exitoObjetivo"));
+    }
+
+    /**
+     * Verifica que si el objetivo elegido no está en el catálogo,
+     * se vuelve al perfil mostrando el error y sin guardar nada.
+     */
+    @Test
+    void guardarObjetivo_codigoInvalido_muestraErrorYNoGuarda() {
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+        doThrow(new IllegalArgumentException("El objetivo seleccionado no es válido"))
+                .when(socioService).actualizarObjetivo(1L, "PERDER_MASA_MUSI");
+
+        String vista = socioController.guardarObjetivo(1L, "PERDER_MASA_MUSI", redirectAttributes);
+
+        assertEquals("redirect:/socios/1/pagos", vista);
+        assertEquals("El objetivo seleccionado no es válido",
+                redirectAttributes.getFlashAttributes().get("errorObjetivo"));
+        assertNull(redirectAttributes.getFlashAttributes().get("exitoObjetivo"));
+    }
+
+    /**
+     * Verifica que elegir "Sin definir" (valor vacío del select) deja el objetivo sin definir.
+     */
+    @Test
+    void guardarObjetivo_opcionSinDefinir_pasaElValorVacio() {
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String vista = socioController.guardarObjetivo(3L, "", redirectAttributes);
+
+        verify(socioService).actualizarObjetivo(3L, "");
+        assertEquals("redirect:/socios/3/pagos", vista);
+    }
+
+    /**
+     * Verifica que el formulario de alta y el de edición mandan el catálogo de objetivos,
+     * para que el <select> tenga con qué moverse.
+     */
+    @Test
+    void mostrarFormularios_incluyenElCatalogoDeObjetivos() {
+        when(socioService.buscarPorId(1L)).thenReturn(Optional.of(crearSocio(1L, true)));
+
+        socioController.mostrarFormularioAlta(model);
+        assertEquals(4, ((List<?>) model.getAttribute("objetivos")).size());
+
+        socioController.mostrarFormularioEdicion(1L, model);
+        assertEquals(4, ((List<?>) model.getAttribute("objetivos")).size());
     }
 }

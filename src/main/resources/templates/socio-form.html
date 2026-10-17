@@ -41,6 +41,17 @@
                        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
             </div>
 
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Objetivo</label>
+                <select th:field="*{objetivo}"
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <option value="">Sin definir</option>
+                    <option th:each="opcion : ${objetivos}"
+                            th:value="${opcion.name()}"
+                            th:text="${opcion.etiqueta}"></option>
+                </select>
+            </div>
+
             <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium mt-2">
                 Guardar
             </button>

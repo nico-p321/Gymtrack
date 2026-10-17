@@ -1,6 +1,7 @@
 package Gimnasio.controller;
 
 import Gimnasio.dto.SocioListadoDTO;
+import Gimnasio.model.Objetivo;
 import Gimnasio.model.Socio;
 import Gimnasio.service.CuotaService;
 import Gimnasio.service.SocioService;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -103,6 +105,7 @@ public class SocioController {
     @GetMapping("/nuevo")
     public String mostrarFormularioAlta(Model model) {
         model.addAttribute("socio", new Socio());
+        model.addAttribute("objetivos", Objetivo.opciones());
         return "socio-form";
     }
 
@@ -112,6 +115,7 @@ public class SocioController {
         Socio socio = socioService.buscarPorId(id)
                 .orElseThrow(() -> new RuntimeException("Socio no encontrado"));
         model.addAttribute("socio", socio);
+        model.addAttribute("objetivos", Objetivo.opciones());
         return "socio-form";
     }
 
@@ -138,5 +142,19 @@ public class SocioController {
     public String reactivar(@PathVariable Long id) {
         socioService.reactivar(id);
         return "redirect:/socios";
+    }
+
+    // Guarda el objetivo elegido en el perfil del socio y vuelve a la ficha
+    @PostMapping("/{id}/objetivo")
+    public String guardarObjetivo(@PathVariable Long id,
+                                  @RequestParam(required = false) String objetivo,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            socioService.actualizarObjetivo(id, objetivo);
+            redirectAttributes.addFlashAttribute("exitoObjetivo", "Objetivo actualizado correctamente");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorObjetivo", e.getMessage());
+        }
+        return "redirect:/socios/" + id + "/pagos";
     }
 }

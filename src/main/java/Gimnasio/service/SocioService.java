@@ -1,5 +1,6 @@
 package Gimnasio.service;
 
+import Gimnasio.model.Objetivo;
 import Gimnasio.model.Socio;
 import Gimnasio.repository.SocioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,5 +72,22 @@ public class SocioService {
     // Búsqueda por texto en nombre o apellido
     public List<Socio> buscarPorTexto(String texto) {
         return socioRepository.findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCase(texto, texto);
+    }
+
+    // Guarda el objetivo elegido del socio.
+    // Un codigo null/vacío deja el objetivo sin definir (se limpia el valor vigente).
+    // Lanza IllegalArgumentException si el código no pertenece al catálogo.
+    public void actualizarObjetivo(Long id, String codigo) {
+        Socio socio = socioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Socio no encontrado"));
+
+        String objetivo = (codigo == null || codigo.isBlank()) ? null : codigo.trim();
+
+        if (objetivo != null && !Objetivo.esValido(objetivo)) {
+            throw new IllegalArgumentException("El objetivo seleccionado no es válido");
+        }
+
+        socio.setObjetivo(objetivo);
+        socioRepository.save(socio);
     }
 }

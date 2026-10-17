@@ -1,6 +1,7 @@
 package Gimnasio.controller;
 
 import Gimnasio.model.Cuota;
+import Gimnasio.model.Objetivo;
 import Gimnasio.model.Socio;
 import Gimnasio.service.CuotaService;
 import Gimnasio.service.SocioService;
@@ -36,6 +37,7 @@ public class CuotaController {
         model.addAttribute("pagos", cuotaService.historialDePagos(idSocio));
         model.addAttribute("estado", cuotaService.calcularEstado(idSocio));
         model.addAttribute("hoy", LocalDate.now());
+        model.addAttribute("objetivos", Objetivo.opciones());
 
         return "socio-perfil";
     }

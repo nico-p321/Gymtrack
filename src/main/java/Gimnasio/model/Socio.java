@@ -31,6 +31,11 @@ public class Socio {
 
     private boolean activo = true;
 
+    // Objetivo del socio dentro del gimnasio (código de Gimnasio.model.Objetivo).
+    // Puede ser null: significa que todavía no definió su objetivo.
+    @Column(length = 30)
+    private String objetivo;
+
     // Getters y setters
 
     public Long getIdSocio() {
@@ -87,5 +92,19 @@ public class Socio {
 
     public void setActivo(boolean activo) {
         this.activo = activo;
+    }
+
+    public String getObjetivo() {
+        return objetivo;
+    }
+
+    public void setObjetivo(String objetivo) {
+        this.objetivo = objetivo;
+    }
+
+    // Etiqueta legible del objetivo para las vistas; "Sin definir" si no tiene ninguno
+    @Transient
+    public String getObjetivoEtiqueta() {
+        return Objetivo.etiquetaDe(objetivo);
     }
 }
