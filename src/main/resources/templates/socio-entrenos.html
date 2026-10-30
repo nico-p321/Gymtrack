@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(titulo=${socio.nombre} + ' · Entrenamientos')}"></head>
+<body class="min-h-screen">
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="max-w-5xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
+
+    <a th:href="@{/socios/{id}/pagos(id=${socio.idSocio})}" class="text-zinc-400 hover:text-lime-400 text-sm w-fit">
+        &larr; Volver al perfil del socio
+    </a>
+
+    <section class="card relative overflow-hidden p-6 sm:p-8">
+        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-lime-400 via-lime-500 to-transparent"></div>
+        <p class="label text-lime-400">Entrenamientos</p>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight"
+            th:text="${socio.nombre} + ' ' + ${socio.apellido}"></h1>
+    </section>
+
+    <p th:if="${exitoEntreno}" th:text="${exitoEntreno}" class="alert-ok"></p>
+    <p th:if="${errorEntreno}" th:text="${errorEntreno}" class="alert-bad"></p>
+
+    <!-- Rutina semanal: el entrenador arma cada día con sus grupos musculares y ejercicios -->
+    <section id="rutina" class="card p-6">
+        <h2 class="card-title mb-1">Rutina semanal</h2>
+        <p class="text-sm text-zinc-400 mb-5">Elegí un día para armar sus grupos musculares y ejercicios.</p>
+
+        <p th:if="${exitoRutina}" th:text="${exitoRutina}" class="alert-ok mb-4"></p>
+        <p th:if="${errorRutina}" th:text="${errorRutina}" class="alert-bad mb-4"></p>
+
+        <!-- Pestañas de días -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
+            <a th:each="d : ${semana}"
+               th:href="@{/socios/{id}/entrenos(id=${socio.idSocio},dia=${d.dia().name()})} + '#rutina'"
+               class="rounded-xl border px-3 py-3 transition"
+               th:classappend="${d.dia() == diaElegido.dia()} ? 'bg-lime-400 border-lime-400 text-black' : 'bg-neutral-950 border-zinc-800 hover:border-lime-400/60'">
+                <p class="text-sm font-bold" th:text="${d.dia().etiqueta}">Lunes</p>
+                <p class="text-xs mt-0.5 truncate"
+                   th:classappend="${d.dia() == diaElegido.dia()} ? 'text-black/70' : 'text-zinc-400'"
+                   th:text="${d.esDescanso()} ? 'Descanso' : (${d.grupos().isEmpty()} ? ${#lists.size(d.ejercicios())} + (${#lists.size(d.ejercicios()) == 1} ? ' ejercicio' : ' ejercicios') : ${d.resumenGrupos()})">Pecho · Hombro</p>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            <!-- Grupos musculares del día -->
+            <form th:action="@{/socios/{id}/rutina/{dia}/grupos(id=${socio.idSocio},dia=${diaElegido.dia().name()})}"
+                  method="post" class="lg:col-span-2 flex flex-col gap-4">
+                <div>
+                    <p class="label" th:text="'Grupos musculares del ' + ${#strings.toLowerCase(diaElegido.dia().etiqueta)}">Grupos</p>
+                    <div class="flex flex-wrap gap-2">
+                        <label th:each="g : ${gruposMusculares}" class="cursor-pointer">
+                            <input type="checkbox" name="grupos" th:value="${g.name()}"
+                                   th:checked="${diaElegido.tieneGrupo(g)}" class="peer sr-only">
+                            <span class="inline-block px-3 py-1.5 rounded-full text-sm font-medium border border-zinc-700 text-zinc-300
+                                         hover:border-lime-400/60 transition
+                                         peer-checked:bg-lime-400 peer-checked:border-lime-400 peer-checked:text-black
+                                         peer-focus-visible:ring-2 peer-focus-visible:ring-lime-400/60"
+                                  th:text="${g.etiqueta}">Pecho</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-secondary w-fit">Guardar grupos</button>
+            </form>
+
+            <!-- Ejercicios del día -->
+            <div class="lg:col-span-3 flex flex-col gap-4">
+                <p class="label" th:text="'Ejercicios del ' + ${#strings.toLowerCase(diaElegido.dia().etiqueta)}">Ejercicios</p>
+
+                <p th:if="${diaElegido.ejercicios().isEmpty()}"
+                   class="text-sm text-zinc-500 bg-neutral-950 border border-dashed border-zinc-800 rounded-xl px-4 py-6 text-center">
+                    Todavía no hay ejercicios para este día.
+                </p>
+
+                <ul th:unless="${diaElegido.ejercicios().isEmpty()}"
+                    class="divide-y divide-zinc-800 bg-neutral-950 border border-zinc-800 rounded-xl">
+                    <li th:each="e : ${diaElegido.ejercicios()}" class="flex items-center gap-3 px-4 py-3">
+                        <span class="flex-1 min-w-0 text-sm font-medium text-white truncate" th:text="${e.ejercicio}"></span>
+                        <span class="text-sm text-zinc-300 whitespace-nowrap" th:text="${e.series} + ' x ' + ${e.repeticiones}"></span>
+                        <span class="text-sm font-semibold text-lime-300 whitespace-nowrap w-16 text-right"
+                              th:text="${e.peso != null} ? ${e.peso} + ' kg' : '-'"></span>
+                        <form th:action="@{/socios/{id}/rutina/{dia}/ejercicios/{idEj}/eliminar(id=${socio.idSocio},dia=${diaElegido.dia().name()},idEj=${e.idEjercicioRutina})}"
+                              method="post" onsubmit="return confirm('¿Quitar este ejercicio de la rutina?');">
+                            <button type="submit" class="text-red-400 hover:text-red-300 text-sm font-medium">Quitar</button>
+                        </form>
+                    </li>
+                </ul>
+
+                <!-- Agregar un ejercicio a la rutina del día -->
+                <form th:action="@{/socios/{id}/rutina/{dia}/ejercicios(id=${socio.idSocio},dia=${diaElegido.dia().name()})}"
+                      method="post" class="grid grid-cols-3 sm:grid-cols-6 gap-3 items-end">
+                    <div class="col-span-3">
+                        <label class="label">Ejercicio</label>
+                        <input type="text" name="ejercicio" required placeholder="Press de banca" class="input">
+                    </div>
+                    <div>
+                        <label class="label">Series</label>
+                        <input type="number" name="series" min="1" step="1" required class="input">
+                    </div>
+                    <div>
+                        <label class="label">Reps</label>
+                        <input type="number" name="repeticiones" min="1" step="1" required class="input">
+                    </div>
+                    <div>
+                        <label class="label">Kg</label>
+                        <input type="number" name="peso" min="0" step="0.5" class="input">
+                    </div>
+                    <div class="col-span-3 sm:col-span-6 flex justify-end">
+                        <button type="submit" class="btn-primary">+ Agregar a la rutina</button>
+                    </div>
+                </form>
+
+                <!-- Pasar la rutina del día al historial cuando el socio la hizo -->
+                <form th:unless="${diaElegido.ejercicios().isEmpty()}"
+                      th:action="@{/socios/{id}/rutina/{dia}/registrar(id=${socio.idSocio},dia=${diaElegido.dia().name()})}"
+                      method="post"
+                      class="flex flex-col sm:flex-row sm:items-end gap-3 pt-4 border-t border-zinc-800">
+                    <div class="flex-1">
+                        <label class="label">El socio hizo esta rutina el</label>
+                        <input type="date" name="fecha" required th:value="${hoy}" class="input">
+                    </div>
+                    <button type="submit" class="btn-secondary">Registrar como realizada</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Historial de ejercicios agrupado por fecha -->
+    <section class="flex flex-col gap-4">
+        <h2 class="card-title">Historial de entrenamientos</h2>
+
+        <p th:if="${entrenos.isEmpty()}" class="card px-6 py-6 text-sm text-zinc-500">
+            Todavía no hay ejercicios registrados para este socio.
+        </p>
+
+        <div th:each="d : ${historial}" class="card overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+                <p class="text-white font-semibold">
+                    <span th:text="${d.nombreDia()}">Lunes</span>
+                    <span class="text-zinc-400 font-normal ml-1" th:text="${#temporals.format(d.fecha(), 'dd/MM/yyyy')}">20/10/2026</span>
+                </p>
+                <span class="badge badge-muted" th:text="${d.cantidadEjercicios()}">3 ejercicios</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-black/40">
+                    <tr>
+                        <th class="th px-6">Ejercicio</th>
+                        <th class="th px-6">Series</th>
+                        <th class="th px-6">Repeticiones</th>
+                        <th class="th px-6">Peso</th>
+                        <th class="th px-6"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entreno : ${d.ejercicios()}" class="border-t border-zinc-800 hover:bg-zinc-800/50 transition">
+                        <td class="td px-6 text-white font-medium" th:text="${entreno.ejercicio}"></td>
+                        <td class="td px-6" th:text="${entreno.series}"></td>
+                        <td class="td px-6" th:text="${entreno.repeticiones}"></td>
+                        <td class="td px-6 font-semibold text-lime-300"
+                            th:text="${entreno.peso != null} ? ${entreno.peso} + ' kg' : '-'"></td>
+                        <td class="td px-6 text-right">
+                            <form th:action="@{/socios/{id}/entrenos/{idEntreno}/eliminar(id=${socio.idSocio},idEntreno=${entreno.idEntreno})}"
+                                  method="post" onsubmit="return confirm('¿Eliminar este ejercicio del historial?');">
+                                <button type="submit" class="text-red-400 hover:text-red-300 text-sm font-medium">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>
