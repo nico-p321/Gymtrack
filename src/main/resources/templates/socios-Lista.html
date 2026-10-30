@@ -1,123 +1,119 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(titulo='Socios')}"></head>
-<body class="bg-slate-50 min-h-screen">
+<body class="min-h-screen">
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
-<main class="max-w-6xl mx-auto p-6">
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
     <!-- Header con título y botón de nuevo socio -->
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-slate-800">Listado de socios</h1>
-        <a th:href="@{/socios/nuevo}"
-           class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm">
-            + Nuevo socio
-        </a>
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-3xl font-extrabold text-white tracking-tight">Socios</h1>
+            <p class="text-sm text-zinc-400 mt-1">Gestioná altas, cuotas y estado de cada socio.</p>
+        </div>
+        <a th:href="@{/socios/nuevo}" class="btn-primary">+ Nuevo socio</a>
     </div>
 
     <!-- Cards resumen: Activos, Inactivos, Vencidos -->
-    <div class="flex gap-4 mb-6">
-        <div class="bg-white rounded-lg shadow-sm px-4 py-3 flex-1">
-            <p class="text-xs text-slate-400 uppercase font-medium">Activos</p>
-            <p class="text-2xl font-bold text-green-600" th:text="${totalActivos}"></p>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="card px-5 py-4 border-l-4 border-l-lime-400">
+            <p class="label">Activos</p>
+            <p class="text-3xl font-extrabold text-lime-400" th:text="${totalActivos}"></p>
         </div>
-        <div class="bg-white rounded-lg shadow-sm px-4 py-3 flex-1">
-            <p class="text-xs text-slate-400 uppercase font-medium">Inactivos</p>
-            <p class="text-2xl font-bold text-slate-500" th:text="${totalInactivos}"></p>
+        <div class="card px-5 py-4 border-l-4 border-l-zinc-600">
+            <p class="label">Inactivos</p>
+            <p class="text-3xl font-extrabold text-zinc-300" th:text="${totalInactivos}"></p>
         </div>
-        <div class="bg-white rounded-lg shadow-sm px-4 py-3 flex-1">
-            <p class="text-xs text-slate-400 uppercase font-medium">Vencidos</p>
-            <p class="text-2xl font-bold text-red-600" th:text="${totalVencidos}"></p>
+        <div class="card px-5 py-4 border-l-4 border-l-red-500">
+            <p class="label">Vencidos</p>
+            <p class="text-3xl font-extrabold text-red-400" th:text="${totalVencidos}"></p>
         </div>
     </div>
 
     <!-- Formulario de filtros: búsqueda por texto, estado socio, estado cuota -->
-    <form th:action="@{/socios}" method="get" class="flex flex-wrap gap-3 mb-6 bg-white p-4 rounded-lg shadow-sm">
+    <form th:action="@{/socios}" method="get" class="card flex flex-wrap gap-3 mb-6 p-4">
         <input type="text" name="texto" placeholder="Buscar por nombre o apellido" th:value="${texto}"
-               class="border border-slate-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-[200px] focus:outline-none focus:ring-2 focus:ring-teal-500">
+               class="input flex-1 min-w-[200px] w-auto">
 
-        <select name="estadoSocio"
-                class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <select name="estadoSocio" class="input w-auto">
             <option value="">-- Estado del socio --</option>
             <option value="activo" th:selected="${estadoSocio == 'activo'}">Activo</option>
             <option value="inactivo" th:selected="${estadoSocio == 'inactivo'}">Inactivo</option>
         </select>
 
-        <select name="estadoCuota"
-                class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <select name="estadoCuota" class="input w-auto">
             <option value="">-- Estado de cuota --</option>
             <option value="al_dia" th:selected="${estadoCuota == 'al_dia'}">Al día</option>
             <option value="vencida" th:selected="${estadoCuota == 'vencida'}">Vencida</option>
         </select>
 
-        <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium">
-            Buscar
-        </button>
-        <a th:href="@{/socios}" class="text-slate-500 hover:text-slate-700 text-sm self-center underline">
+        <button type="submit" class="btn-primary">Buscar</button>
+        <a th:href="@{/socios}" class="text-zinc-400 hover:text-lime-400 text-sm self-center underline">
             Limpiar filtros
         </a>
     </form>
 
     <!-- Mensaje cuando no hay resultados -->
-    <div th:if="${#lists.isEmpty(socios)}" class="bg-white rounded-lg shadow-sm p-8 text-center">
-        <p th:if="${hayFiltrosAplicados}" class="text-slate-500">
+    <div th:if="${#lists.isEmpty(socios)}" class="card p-10 text-center">
+        <p th:if="${hayFiltrosAplicados}" class="text-zinc-400">
             No se encontraron socios con esos criterios.
         </p>
-        <p th:unless="${hayFiltrosAplicados}" class="text-slate-500">
+        <p th:unless="${hayFiltrosAplicados}" class="text-zinc-400">
             Todavía no hay socios registrados.
         </p>
     </div>
 
     <!-- Tabla de socios con estado de cuota calculado -->
-    <div th:unless="${#lists.isEmpty(socios)}" class="bg-white rounded-lg shadow-sm overflow-x-auto">
+    <div th:unless="${#lists.isEmpty(socios)}" class="card overflow-x-auto">
         <table class="w-full text-left border-collapse">
-            <thead class="bg-slate-100">
+            <thead class="bg-black/40">
             <tr>
-                <th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Nombre</th>
-                <th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Apellido</th>
-                <th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Teléfono</th>
-                <th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Email</th>
-                <th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Fecha de alta</th>
-                <th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Estado socio</th>
-                <th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Estado cuota</th>
-                <th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase text-center">Días vencido</th>
-                <th class="px-4 py-3 text-xs font-semibold text-slate-600 uppercase">Acciones</th>
+                <th class="th">Nombre</th>
+                <th class="th">Apellido</th>
+                <th class="th">Teléfono</th>
+                <th class="th">Email</th>
+                <th class="th">Fecha de alta</th>
+                <th class="th">Estado socio</th>
+                <th class="th">Estado cuota</th>
+                <th class="th text-center">Días vencido</th>
+                <th class="th">Acciones</th>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="socio : ${socios}">
-                <!-- Clase CSS dinámica según estado de cuota: crítico (rojo), vencido (naranja), al día (verde), sin pagos (gris) -->
-                <th:with="claseCuota=(${socio.critico}? 'bg-red-100 text-red-700' : (${socio.estadoCuota == 'VENCIDO'} ? 'bg-orange-100 text-orange-700' : (${socio.estadoCuota == 'AL DÍA'} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600')))"
-                <td class="border-b last:border-0 hover:bg-slate-50 transition">
-                <td class="px-4 py-3 text-sm text-slate-700" th:text="${socio.nombre}"></td>
-                <td class="px-4 py-3 text-sm text-slate-700" th:text="${socio.apellido}"></td>
-                <td class="px-4 py-3 text-sm text-slate-500" th:text="${socio.telefono}"></td>
-                <td class="px-4 py-3 text-sm text-slate-500" th:text="${socio.email}"></td>
-                <td class="px-4 py-3 text-sm text-slate-500" th:text="${socio.fechaAlta}"></td>
-                <td class="px-4 py-3">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium"
-                          th:classappend="${socio.activo} ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'"
+            <!-- Clase CSS dinámica según estado de cuota: crítico (rojo), vencido (naranja), al día (verde), sin pagos (gris) -->
+            <tr th:each="socio : ${socios}"
+                th:with="claseCuota=(${socio.critico}? 'badge-bad' : (${socio.estadoCuota == 'VENCIDO'} ? 'badge-warn' : (${socio.estadoCuota == 'AL DÍA'} ? 'badge-ok' : 'badge-muted')))"
+                class="border-t border-zinc-800 hover:bg-zinc-800/50 transition">
+                <td class="td text-white font-medium" th:text="${socio.nombre}"></td>
+                <td class="td text-white font-medium" th:text="${socio.apellido}"></td>
+                <td class="td text-zinc-400" th:text="${socio.telefono}"></td>
+                <td class="td text-zinc-400" th:text="${socio.email}"></td>
+                <td class="td text-zinc-400 whitespace-nowrap" th:text="${socio.fechaAlta}"></td>
+                <td class="td">
+                    <span class="badge"
+                          th:classappend="${socio.activo} ? 'badge-ok' : 'badge-muted'"
                           th:text="${socio.activo} ? 'Activo' : 'Inactivo'"></span>
                 </td>
-                <td class="px-4 py-3">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium" th:classappend="${claseCuota}"
+                <td class="td">
+                    <span class="badge" th:classappend="${claseCuota}"
                           th:text="${socio.critico} ? 'MOROSO CRÍTICO' : ${socio.estadoCuota}"></span>
                 </td>
-                <td class="px-4 py-3 text-sm text-slate-500 text-center" th:text="${socio.diasVencido} ?: '-'"></td>
-                <td class="px-4 py-3 text-sm whitespace-nowrap">
-                    <a th:href="@{/socios/{id}/pagos(id=${socio.idSocio})}" class="text-teal-600 hover:underline">Ver pagos</a>
-                    <span class="text-slate-300 mx-1">|</span>
-                    <a th:href="@{/socios/{id}/editar(id=${socio.idSocio})}" class="text-blue-600 hover:underline">Editar</a>
-                    <span class="text-slate-300 mx-1">|</span>
+                <td class="td text-zinc-400 text-center" th:text="${socio.diasVencido} ?: '-'"></td>
+                <td class="td whitespace-nowrap">
+                    <a th:href="@{/socios/{id}/pagos(id=${socio.idSocio})}" class="link">Ver perfil</a>
+                    <span class="text-zinc-700 mx-1">|</span>
+                    <a th:href="@{/socios/{id}/editar(id=${socio.idSocio})}" class="text-zinc-300 hover:text-white hover:underline">Editar</a>
+                    <span class="text-zinc-700 mx-1">|</span>
                     <!-- Formulario inline para dar de baja (solo si activo) -->
                     <form th:if="${socio.activo}" th:action="@{/socios/{id}/baja(id=${socio.idSocio})}" method="post" class="inline">
                         <button type="submit" onclick="return confirm('¿Estás seguro de dar de baja a este socio?');"
-                                class="bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded text-xs font-medium">
+                                class="badge badge-bad hover:bg-red-500/20">
                             Dar de baja
                         </button>
                     </form>
                     <!-- Formulario inline para reactivar (solo si inactivo) -->
                     <form th:unless="${socio.activo}" th:action="@{/socios/{id}/reactivar(id=${socio.idSocio})}" method="post" class="inline">
-                        <button type="submit" class="bg-green-50 text-green-600 hover:bg-green-100 px-2 py-1 rounded text-xs font-medium">
+                        <button type="submit" class="badge badge-ok hover:bg-lime-400/20">
                             Reactivar
                         </button>
                     </form>

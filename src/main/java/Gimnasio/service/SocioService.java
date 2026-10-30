@@ -1,12 +1,16 @@
 package Gimnasio.service;
 
+import Gimnasio.dto.PosibleDuplicado;
 import Gimnasio.model.Objetivo;
 import Gimnasio.model.Socio;
 import Gimnasio.repository.SocioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -42,15 +46,92 @@ public class SocioService {
     // Valida email duplicado antes de guardar (alta o edición)
     // Retorna null si OK, o mensaje de error si el email ya existe en otro socio
     public String guardarConValidacion(Socio socio) {
-        Optional<Socio> existente = socioRepository.findByEmail(socio.getEmail());
-
-        // Si existe un socio con ese email Y no es el mismo que estoy editando -> error
-        if (existente.isPresent() && !existente.get().getIdSocio().equals(socio.getIdSocio())) {
-            return "Ese email ya pertenece a otro socio";
+        String error = validarEmail(socio);
+        if (error != null) {
+            return error;
         }
 
-        socioRepository.save(socio);
+        if (socio.getIdSocio() == null) {
+            normalizarDatos(socio, socio);
+            socioRepository.save(socio);
+        } else {
+            // En la edición se copian solo los campos del formulario, así no se pierden
+            // la fecha de alta ni el estado activo/inactivo (que el formulario no envía)
+            Socio existente = socioRepository.findById(socio.getIdSocio())
+                    .orElseThrow(() -> new RuntimeException("Socio no encontrado"));
+            normalizarDatos(socio, existente);
+            socioRepository.save(existente);
+        }
         return null; // null = sin errores
+    }
+
+    // El email no se puede repetir; se compara sin mayúsculas ni espacios.
+    // Retorna null si OK, o el mensaje de error
+    public String validarEmail(Socio socio) {
+        String email = normalizarEmail(socio.getEmail());
+        if (email == null) {
+            return null;
+        }
+        boolean usado = socioRepository.findAll().stream()
+                .anyMatch(otro -> !esElMismo(otro, socio) && email.equals(normalizarEmail(otro.getEmail())));
+        return usado ? "Ese email ya pertenece a otro socio" : null;
+    }
+
+    // Socios ya cargados con el mismo nombre y apellido o el mismo teléfono.
+    // Se ignora el propio socio cuando se está editando.
+    public List<PosibleDuplicado> buscarPosiblesDuplicados(Socio socio) {
+        String nombreCompleto = normalizarTexto(socio.getNombre()) + "|" + normalizarTexto(socio.getApellido());
+        String telefono = normalizarTelefono(socio.getTelefono());
+
+        List<PosibleDuplicado> duplicados = new ArrayList<>();
+        for (Socio otro : socioRepository.findAll()) {
+            if (esElMismo(otro, socio)) {
+                continue;
+            }
+            List<String> motivos = new ArrayList<>();
+            if (nombreCompleto.equals(normalizarTexto(otro.getNombre()) + "|" + normalizarTexto(otro.getApellido()))) {
+                motivos.add("mismo nombre y apellido");
+            }
+            if (!telefono.isEmpty() && telefono.equals(normalizarTelefono(otro.getTelefono()))) {
+                motivos.add("mismo teléfono");
+            }
+            if (!motivos.isEmpty()) {
+                duplicados.add(new PosibleDuplicado(otro, motivos));
+            }
+        }
+        return duplicados;
+    }
+
+    private static boolean esElMismo(Socio otro, Socio socio) {
+        return socio.getIdSocio() != null && socio.getIdSocio().equals(otro.getIdSocio());
+    }
+
+    // Copia los datos del formulario limpiando espacios; email y objetivo vacíos quedan en null
+    private static void normalizarDatos(Socio desde, Socio hacia) {
+        hacia.setNombre(desde.getNombre() == null ? null : desde.getNombre().trim());
+        hacia.setApellido(desde.getApellido() == null ? null : desde.getApellido().trim());
+        hacia.setTelefono(desde.getTelefono() == null || desde.getTelefono().isBlank() ? null : desde.getTelefono().trim());
+        hacia.setEmail(normalizarEmail(desde.getEmail()));
+        hacia.setObjetivo(desde.getObjetivo() == null || desde.getObjetivo().isBlank() ? null : desde.getObjetivo().trim());
+    }
+
+    // "  Juan@Mail.com " -> "juan@mail.com"; vacío -> null (varios socios pueden no tener email)
+    static String normalizarEmail(String email) {
+        return email == null || email.isBlank() ? null : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    // "  José   PÉREZ " -> "jose perez": sin mayúsculas, tildes ni espacios de más
+    static String normalizarTexto(String texto) {
+        if (texto == null) {
+            return "";
+        }
+        String sinTildes = Normalizer.normalize(texto, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return sinTildes.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+    }
+
+    // "+54 9 2345-68 8807" -> "5492345688807": sin espacios, guiones, "+", paréntesis ni puntos
+    static String normalizarTelefono(String telefono) {
+        return telefono == null ? "" : telefono.replaceAll("[\\s\\-+().]", "");
     }
 
     // Marca un socio como inactivo (baja lógica, no borrado físico)

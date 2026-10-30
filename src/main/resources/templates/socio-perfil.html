@@ -1,137 +1,180 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(titulo=${socio.nombre})}"></head>
-<body class="bg-slate-50 min-h-screen">
+<body class="min-h-screen">
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
-<main class="max-w-3xl mx-auto p-6 flex flex-col gap-6">
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
 
-    <!-- Ficha del socio con estado de cuenta -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
-        <h1 class="text-2xl font-bold text-slate-800" th:text="${socio.nombre} + ' ' + ${socio.apellido}"></h1>
-        <p class="text-sm text-slate-500 mt-1">Teléfono: <span th:text="${socio.telefono}"></span></p>
-        <p class="text-sm text-slate-500">Email: <span th:text="${socio.email}"></span></p>
-        <p class="text-sm text-slate-500">Objetivo:
-            <span class="ml-2 px-2 py-1 rounded-full text-xs font-medium"
-                  th:classappend="${socio.objetivo == null} ? 'bg-gray-100 text-gray-600' : 'bg-teal-100 text-teal-700'"
-                  th:text="${socio.objetivoEtiqueta}"></span>
-        </p>
-        <a th:href="@{/socios/{id}/entrenos(id=${socio.idSocio})}"
-           class="inline-block mt-3 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-            Entrenamientos
-        </a>
-        <p class="mt-3">
-            <span class="text-sm font-medium text-slate-600">Estado de la cuenta:</span>
-            <span class="ml-2 px-2 py-1 rounded-full text-xs font-medium"
-                  th:classappend="${estado == 'AL DÍA'} ? 'bg-green-100 text-green-700' : (${estado == 'VENCIDO'} ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600')"
-                  th:text="${estado}"></span>
-        </p>
+    <a th:href="@{/socios}" class="text-zinc-400 hover:text-lime-400 text-sm w-fit">&larr; Volver al listado</a>
+
+    <!-- Cabecera: ficha del socio con estado de cuenta y objetivo -->
+    <section class="card relative overflow-hidden p-6 sm:p-8">
+        <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-lime-400 via-lime-500 to-transparent"></div>
+        <div class="flex flex-col md:flex-row md:items-center gap-6">
+            <!-- Avatar con iniciales -->
+            <div class="w-20 h-20 shrink-0 rounded-2xl bg-lime-400 text-black grid place-items-center text-3xl font-extrabold uppercase"
+                 th:text="${#strings.substring(socio.nombre,0,1)} + ${#strings.isEmpty(socio.apellido) ? '' : #strings.substring(socio.apellido,0,1)}">AB</div>
+
+            <div class="flex-1 min-w-0">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight break-words"
+                    th:text="${socio.nombre} + ' ' + ${socio.apellido}"></h1>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="badge"
+                          th:classappend="${estado == 'AL DÍA'} ? 'badge-ok' : (${estado == 'VENCIDO'} ? 'badge-bad' : 'badge-muted')"
+                          th:text="'Cuenta: ' + ${estado}"></span>
+                    <span class="badge"
+                          th:classappend="${socio.objetivo == null} ? 'badge-muted' : 'badge-ok'"
+                          th:text="'Objetivo: ' + ${socio.objetivoEtiqueta}"></span>
+                </div>
+            </div>
+
+            <a th:href="@{/socios/{id}/entrenos(id=${socio.idSocio})}" class="btn-primary self-start md:self-center">
+                Entrenamientos &rarr;
+            </a>
+        </div>
+
+        <!-- Datos de contacto -->
+        <dl class="mt-6 pt-6 border-t border-zinc-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <dt class="label">Teléfono</dt>
+                <dd class="text-sm text-zinc-200 break-all" th:text="${#strings.isEmpty(socio.telefono)} ? '—' : ${socio.telefono}"></dd>
+            </div>
+            <div>
+                <dt class="label">Email</dt>
+                <dd class="text-sm text-zinc-200 break-all" th:text="${#strings.isEmpty(socio.email)} ? '—' : ${socio.email}"></dd>
+            </div>
+        </dl>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+
+        <!-- Columna izquierda: formularios de carga -->
+        <div class="lg:col-span-3 flex flex-col gap-6">
+
+            <!-- Formulario para registrar nuevo pago -->
+            <section class="card p-6">
+                <h2 class="card-title mb-5">Registrar nuevo pago</h2>
+                <form th:action="@{/socios/{id}/pagos/registrar(id=${socio.idSocio})}" method="post"
+                      class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="label">Fecha de pago</label>
+                        <input type="date" name="fechaPago" required th:value="${hoy}" class="input">
+                    </div>
+                    <div>
+                        <label class="label">Monto (opcional)</label>
+                        <input type="number" step="0.01" name="monto" placeholder="$ 0,00" class="input">
+                    </div>
+                    <div class="sm:col-span-2 flex justify-end">
+                        <button type="submit" class="btn-primary">Registrar pago</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Medidas físicas -->
+            <section class="card p-6">
+                <h2 class="card-title mb-5">Registrar medidas físicas</h2>
+
+                <p th:if="${exitoMedida}" th:text="${exitoMedida}" class="alert-ok mb-4"></p>
+                <p th:if="${errorMedida}" th:text="${errorMedida}" class="alert-bad mb-4"></p>
+
+                <form th:action="@{/socios/{id}/medidas/guardar(id=${socio.idSocio})}" method="post"
+                      class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="label">Fecha</label>
+                        <input type="date" name="fecha" required th:value="${hoy}" class="input">
+                    </div>
+                    <div>
+                        <label class="label">Peso (kg)</label>
+                        <input type="number" step="0.1" name="peso" required class="input">
+                    </div>
+                    <div>
+                        <label class="label">Altura (cm)</label>
+                        <input type="number" step="0.1" name="altura" required class="input">
+                    </div>
+                    <div class="sm:col-span-3 flex justify-end">
+                        <button type="submit" class="btn-primary">Guardar medidas</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Objetivo del socio: se elige de una lista y queda vigente hasta que se cambie -->
+            <section class="card p-6">
+                <h2 class="card-title mb-5">Objetivo del socio</h2>
+
+                <p th:if="${exitoObjetivo}" th:text="${exitoObjetivo}" class="alert-ok mb-4"></p>
+                <p th:if="${errorObjetivo}" th:text="${errorObjetivo}" class="alert-bad mb-4"></p>
+
+                <form th:action="@{/socios/{id}/objetivo(id=${socio.idSocio})}" method="post"
+                      class="flex flex-col sm:flex-row gap-4 sm:items-end">
+                    <div class="flex-1">
+                        <label class="label">Objetivo</label>
+                        <select name="objetivo" class="input">
+                            <option value="" th:selected="${socio.objetivo == null}">Sin definir</option>
+                            <option th:each="opcion : ${objetivos}"
+                                    th:value="${opcion.name()}"
+                                    th:text="${opcion.etiqueta}"
+                                    th:selected="${socio.objetivo == opcion.name()}"></option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-secondary">Guardar objetivo</button>
+                </form>
+            </section>
+        </div>
+
+        <!-- Columna derecha: análisis con IA e historial de pagos -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+
+        <!-- Análisis del progreso con IA: si la IA falla se muestra el aviso y el resto del perfil sigue igual -->
+        <section class="card p-6">
+            <h2 class="card-title mb-2">Análisis con IA</h2>
+            <p class="text-sm text-zinc-400 mb-4">
+                Recomendaciones según el objetivo, las medidas y los entrenamientos del socio.
+            </p>
+
+            <p th:if="${errorIa}" th:text="${errorIa}" class="alert-bad mb-4"></p>
+            <div th:if="${analisisIa}"
+                 class="mb-4 bg-black/40 border border-lime-400/30 rounded-xl p-4 text-sm text-zinc-200 leading-relaxed whitespace-pre-line"
+                 th:text="${analisisIa}"></div>
+
+            <form th:action="@{/socios/{id}/analisis/progreso(id=${socio.idSocio})}" method="post"
+                  onsubmit="const b = this.querySelector('button'); b.disabled = true; b.textContent = 'Analizando…';">
+                <button type="submit" class="btn-primary w-full disabled:opacity-60 disabled:cursor-wait">
+                    Analizar progreso
+                </button>
+            </form>
+        </section>
+
+        <section class="card overflow-hidden">
+            <div class="px-6 pt-6 pb-4 flex items-center justify-between">
+                <h2 class="card-title">Historial de pagos</h2>
+                <span class="badge badge-muted" th:text="${#lists.size(pagos)}">0</span>
+            </div>
+
+            <p th:if="${#lists.isEmpty(pagos)}" class="px-6 pb-6 text-sm text-zinc-500">
+                Todavía no hay pagos registrados.
+            </p>
+
+            <div th:unless="${#lists.isEmpty(pagos)}" class="max-h-[32rem] overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-black/40 sticky top-0">
+                    <tr>
+                        <th class="th px-6">Fecha de pago</th>
+                        <th class="th px-6 text-right">Monto</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="pago : ${pagos}" class="border-t border-zinc-800 hover:bg-zinc-800/50 transition">
+                        <td class="td px-6" th:text="${pago.fechaPago}"></td>
+                        <td class="td px-6 text-right font-semibold text-lime-300"
+                            th:text="${pago.monto != null} ? '$' + ${pago.monto} : '—'"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        </div>
     </div>
-
-    <!-- Objetivo del socio: se elige de una lista y queda vigente hasta que se cambie -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
-        <h2 class="text-lg font-semibold text-slate-800 mb-4">Objetivo del socio</h2>
-
-        <p th:if="${exitoObjetivo}" th:text="${exitoObjetivo}"
-           class="bg-green-50 text-green-700 text-sm px-3 py-2 rounded mb-4"></p>
-        <p th:if="${errorObjetivo}" th:text="${errorObjetivo}"
-           class="bg-red-50 text-red-600 text-sm px-3 py-2 rounded mb-4"></p>
-
-        <form th:action="@{/socios/{id}/objetivo(id=${socio.idSocio})}" method="post"
-              class="flex flex-wrap gap-4 items-end">
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Objetivo</label>
-                <select name="objetivo"
-                        class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option value="" th:selected="${socio.objetivo == null}">Sin definir</option>
-                    <option th:each="opcion : ${objetivos}"
-                            th:value="${opcion.name()}"
-                            th:text="${opcion.etiqueta}"
-                            th:selected="${socio.objetivo == opcion.name()}"></option>
-                </select>
-            </div>
-            <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Guardar objetivo
-            </button>
-        </form>
-    </div>
-
-    <!-- Formulario para registrar nuevo pago -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
-        <h2 class="text-lg font-semibold text-slate-800 mb-4">Registrar nuevo pago</h2>
-        <form th:action="@{/socios/{id}/pagos/registrar(id=${socio.idSocio})}" method="post" class="flex flex-wrap gap-4 items-end">
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Fecha de pago</label>
-                <input type="date" name="fechaPago" required th:value="${hoy}"
-                       class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Monto (opcional)</label>
-                <input type="number" step="0.01" name="monto"
-                       class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-            <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Registrar pago
-            </button>
-        </form>
-    </div>
-
-    <div class="bg-white rounded-lg shadow-sm p-6">
-        <h2 class="text-lg font-semibold text-slate-800 mb-4">Registrar medidas físicas</h2>
-
-        <p th:if="${exitoMedida}" th:text="${exitoMedida}"
-           class="bg-green-50 text-green-700 text-sm px-3 py-2 rounded mb-4"></p>
-        <p th:if="${errorMedida}" th:text="${errorMedida}"
-           class="bg-red-50 text-red-600 text-sm px-3 py-2 rounded mb-4"></p>
-
-        <form th:action="@{/socios/{id}/medidas/guardar(id=${socio.idSocio})}" method="post"
-              class="flex flex-wrap gap-4 items-end">
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Fecha</label>
-                <input type="date" name="fecha" required th:value="${hoy}"
-                       class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Peso (kg)</label>
-                <input type="number" step="0.1" name="peso" required
-                       class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Altura (cm)</label>
-                <input type="number" step="0.1" name="altura" required
-                       class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Grasa corporal % (opcional)</label>
-                <input type="number" step="0.1" name="grasaCorporal"
-                       class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-            <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Guardar medidas
-            </button>
-        </form>
-    </div>
-
-    <!-- Historial de pagos del socio -->
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <h2 class="text-lg font-semibold text-slate-800 px-6 pt-6">Historial de pagos</h2>
-        <table class="w-full text-left border-collapse mt-4">
-            <thead class="bg-slate-100">
-            <tr>
-                <th class="px-6 py-3 text-xs font-semibold text-slate-600 uppercase">Fecha de pago</th>
-                <th class="px-6 py-3 text-xs font-semibold text-slate-600 uppercase">Monto</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="pago : ${pagos}" class="border-t hover:bg-slate-50">
-                <td class="px-6 py-3 text-sm text-slate-700" th:text="${pago.fechaPago}"></td>
-                <td class="px-6 py-3 text-sm text-slate-700" th:text="${pago.monto}"></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <a th:href="@{/socios}" class="text-slate-500 hover:text-slate-700 text-sm">&larr; Volver al listado</a>
 </main>
 </body>
 </html>

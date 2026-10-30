@@ -1,50 +1,88 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(titulo='Socio')}"></head>
-<body class="bg-slate-50 min-h-screen">
+<body class="min-h-screen">
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
-<main class="max-w-lg mx-auto p-6">
-    <div class="bg-white rounded-lg shadow-sm p-6">
+<main class="max-w-lg mx-auto px-4 sm:px-6 py-8">
+    <a th:href="@{/socios}" class="text-zinc-400 hover:text-lime-400 text-sm">&larr; Volver al listado</a>
+
+    <div class="card p-6 sm:p-8 mt-4">
         <!-- Título dinámico: "Editar socio" si tiene ID, "Dar de alta un socio" si es nuevo -->
-        <h1 class="text-xl font-bold text-slate-800 mb-4"
+        <h1 class="text-2xl font-extrabold text-white tracking-tight mb-6"
             th:text="${socio.idSocio} != null ? 'Editar socio' : 'Dar de alta un socio'"></h1>
 
         <!-- Muestra error de validación (ej: email duplicado) -->
-        <p th:if="${error}" th:text="${error}" class="bg-red-50 text-red-600 text-sm px-3 py-2 rounded mb-4"></p>
+        <p th:if="${error}" th:text="${error}" class="alert-bad mb-4"></p>
 
-        <form th:action="@{/socios/guardar}" th:object="${socio}" method="post" class="flex flex-col gap-4">
+        <!-- Aviso de posibles socios repetidos: el usuario decide si guarda igual, reactiva o cancela -->
+        <div th:if="${posiblesDuplicados}" class="mb-6 bg-orange-500/10 border border-orange-500/30 rounded-xl p-4">
+            <p class="text-sm font-semibold text-orange-300">Este socio podría estar repetido</p>
+            <p class="text-sm text-zinc-300 mt-1">Ya hay socios cargados con datos parecidos:</p>
+
+            <ul class="mt-3 flex flex-col gap-2">
+                <li th:each="d : ${posiblesDuplicados}"
+                    class="bg-neutral-950 border border-zinc-800 rounded-lg px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <div class="flex-1 min-w-[12rem]">
+                        <p class="text-sm font-medium text-white">
+                            <span th:text="${d.socio().nombre} + ' ' + ${d.socio().apellido}"></span>
+                            <span class="badge ml-1" th:classappend="${d.socio().activo} ? 'badge-ok' : 'badge-muted'"
+                                  th:text="${d.socio().activo} ? 'Activo' : 'Inactivo'"></span>
+                        </p>
+                        <p class="text-xs text-zinc-400 mt-0.5">
+                            <span th:text="${d.socio().telefono} ?: 'Sin teléfono'"></span> ·
+                            <span th:text="${d.socio().email} ?: 'Sin email'"></span>
+                        </p>
+                        <p class="text-xs text-orange-300 mt-0.5" th:text="'Coincide: ' + ${d.motivosTexto()}"></p>
+                    </div>
+                    <a th:if="${d.socio().activo}" th:href="@{/socios/{id}/pagos(id=${d.socio().idSocio})}"
+                       class="link text-sm">Ver perfil</a>
+                    <!-- Si el socio repetido está dado de baja, se ofrece reactivarlo en vez de crear otro -->
+                    <form th:unless="${d.socio().activo}" th:action="@{/socios/{id}/reactivar(id=${d.socio().idSocio})}"
+                          method="post">
+                        <button type="submit" class="btn-primary !py-1.5 text-xs">Reactivar este socio</button>
+                    </form>
+                </li>
+            </ul>
+
+            <div class="mt-4 flex flex-wrap gap-3">
+                <!-- Reenvía el formulario de abajo confirmando que no es un duplicado -->
+                <button type="submit" form="formSocio" name="confirmarDuplicado" value="true" class="btn-secondary">
+                    Guardar igual
+                </button>
+                <a th:href="@{/socios}" class="btn text-zinc-400 hover:text-white">Cancelar</a>
+            </div>
+        </div>
+
+        <form id="formSocio" th:action="@{/socios/guardar}" th:object="${socio}" method="post" class="flex flex-col gap-4">
             <!-- ID oculto para edición (nuevo socio no tiene ID) -->
             <input type="hidden" th:field="*{idSocio}">
 
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Nombre</label>
-                <input type="text" th:field="*{nombre}" required
-                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="label">Nombre</label>
+                    <input type="text" th:field="*{nombre}" required class="input">
+                </div>
+
+                <div>
+                    <label class="label">Apellido</label>
+                    <input type="text" th:field="*{apellido}" required class="input">
+                </div>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Apellido</label>
-                <input type="text" th:field="*{apellido}" required
-                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <label class="label">Teléfono</label>
+                <input type="text" th:field="*{telefono}" class="input">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Teléfono</label>
-                <input type="text" th:field="*{telefono}"
-                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <label class="label">Email</label>
+                <input type="email" th:field="*{email}" class="input">
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Email</label>
-                <input type="email" th:field="*{email}"
-                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Objetivo</label>
-                <select th:field="*{objetivo}"
-                        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <label class="label">Objetivo</label>
+                <select th:field="*{objetivo}" class="input">
                     <option value="">Sin definir</option>
                     <option th:each="opcion : ${objetivos}"
                             th:value="${opcion.name()}"
@@ -52,7 +90,7 @@
                 </select>
             </div>
 
-            <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium mt-2">
+            <button type="submit" class="btn-primary mt-2 w-full">
                 Guardar
             </button>
         </form>

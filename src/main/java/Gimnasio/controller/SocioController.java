@@ -1,5 +1,6 @@
 package Gimnasio.controller;
 
+import Gimnasio.dto.PosibleDuplicado;
 import Gimnasio.dto.SocioListadoDTO;
 import Gimnasio.model.Objetivo;
 import Gimnasio.model.Socio;
@@ -119,15 +120,40 @@ public class SocioController {
         return "socio-form";
     }
 
-    // Procesa guardado (alta o edición) con validación de email único
+    // Procesa guardado (alta o edición):
+    // 1) email repetido -> error, no se guarda
+    // 2) mismo nombre y apellido o mismo teléfono -> aviso; se guarda solo si el usuario confirma
     @PostMapping("/guardar")
-    public String guardar(@ModelAttribute Socio socio, Model model) {
-        String error = socioService.guardarConValidacion(socio);
+    public String guardar(@ModelAttribute Socio socio,
+                          @RequestParam(defaultValue = "false") boolean confirmarDuplicado,
+                          Model model) {
+        String error = socioService.validarEmail(socio);
         if (error != null) {
             model.addAttribute("error", error);
-            return "socio-form";
+            return volverAlFormulario(socio, model);
+        }
+
+        if (!confirmarDuplicado) {
+            List<PosibleDuplicado> duplicados = socioService.buscarPosiblesDuplicados(socio);
+            if (!duplicados.isEmpty()) {
+                model.addAttribute("posiblesDuplicados", duplicados);
+                return volverAlFormulario(socio, model);
+            }
+        }
+
+        error = socioService.guardarConValidacion(socio);
+        if (error != null) {
+            model.addAttribute("error", error);
+            return volverAlFormulario(socio, model);
         }
         return "redirect:/socios";
+    }
+
+    // Vuelve a mostrar el formulario con los datos cargados y el catálogo de objetivos
+    private String volverAlFormulario(Socio socio, Model model) {
+        model.addAttribute("socio", socio);
+        model.addAttribute("objetivos", Objetivo.opciones());
+        return "socio-form";
     }
 
     // Da de baja lógica a un socio (activo = false)
